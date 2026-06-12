@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Comprehension Syntax Mapper</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #f8fafc; color: #0f172a; padding: 20px; display: flex; justify-content: center; }
+        .card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); width: 100%; max-width: 900px; overflow: hidden; }
+        .header { background: #1e3a8a; color: white; padding: 18px 20px; }
+        .header h2 { font-size: 1.3rem; font-weight: 600; }
+        .header p { font-size: 0.85rem; color: #93c5fd; margin-top: 4px; }
+        .tabs { display: flex; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; padding: 4px 4px 0 4px; }
+        .tab { padding: 10px 16px; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; color: #64748b; cursor: pointer; border-radius: 6px 6px 0 0; border-bottom: 2px solid transparent; }
+        .tab.active { color: #1e3a8a; border-bottom-color: #1e3a8a; background: white; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 20px; }
+        @media (min-width: 768px) { .grid { grid-template-columns: 1fr 1fr; } }
+        .panel { border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #fafafa; }
+        .panel-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 12px; }
+        .code-block { background: #0f172a; color: #f8fafc; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; line-height: 1.6; min-height: 130px; }
+        .syntax-part { padding: 2px 4px; border-radius: 4px; transition: all 0.2s; cursor: help; display: inline-block; }
+        .expr-blue { background: rgba(59, 130, 246, 0.25); border: 1px solid #3b82f6; color: #60a5fa; }
+        .loop-purple { background: rgba(168, 85, 247, 0.25); border: 1px solid #a855f7; color: #c084fc; }
+        .cond-amber { background: rgba(245, 158, 11, 0.25); border: 1px solid #f59e0b; color: #fbbf24; }
+        
+        .legend-container { grid-column: 1 / -1; margin-top: -5px; margin-bottom: 5px; }
+        .legend { display: flex; gap: 20px; font-size: 0.8rem; justify-content: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 4px; }
+        
+        .pipeline-box { grid-column: 1 / -1; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; }
+        .array-container { display: flex; gap: 10px; justify-content: center; margin: 12px 0; }
+        .element-box { background: white; border: 2px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; min-width: 85px; text-align: center; font-size: 0.85rem; font-weight: bold; font-family: monospace; transition: all 0.3s; }
+        .element-box.processing { border-color: #3b82f6; background: #eff6ff; transform: scale(1.05); }
+        
+        /* Filtering Layer Highlights */
+        .element-box.rejected { border-color: #10b981; background: #ecfdf5; color: #065f46; }
+        .element-box.accepted { border-color: #ef4444; background: #fef2f2; color: #991b1b; opacity: 0.6; }
+        
+        /* Conditional Mapping Highlights */
+        .element-box.cold-highlight { border-color: #3b82f6; background: #eff6ff; color: #1e40af; }
+        .element-box.warm-highlight { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
+        
+        .btn { background: #1e3a8a; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header">
+        <h2>List Comprehension Syntax Mapper</h2>
+        <p>Switch configuration structures to map how multi-line boilerplate cycles translate cleanly into concise single-line layouts.</p>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab active" id="tab-filter" onclick="switchMode('filter')">Data Filtering Layer (if at end)</button>
+        <button class="tab" id="tab-ifelse" onclick="switchMode('ifelse')">Conditional Mapping Layer (if-else at start)</button>
+    </div>
+    
+    <div class="grid">
+        <div class="panel">
+            <div class="panel-title">Standard Loop Structure</div>
+            <div class="code-block" id="loop-code"></div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-title">Equivalent List Comprehension</div>
+            <div class="code-block" id="comp-code"></div>
+        </div>
+        
+        <div class="legend-container">
+            <div class="legend">
+                <div class="legend-item"><div class="legend-dot expr-blue"></div> Transformation / Value Output</div>
+                <div class="legend-item"><div class="legend-dot loop-purple"></div> Collection Iteration Loop</div>
+                <div class="legend-item"><div class="legend-dot cond-amber"></div> Conditional Gate Filter</div>
+            </div>
+        </div>
+        
+        <div class="pipeline-box">
+            <div class="panel-title" style="text-align: center;">Array Engine Tracker</div>
+            <div class="array-container" id="array-engine"></div>
+            <div style="text-align: center; margin-top: 12px;">
+                <button class="btn" onclick="runPipelineAnimation()">Animate Pipeline Data Processing</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeMode = 'filter';
+    const sourceData = [12, 0, 25, 0, 8];
+    let animationInterval = null;
+
+    const dataTemplates = {
+        filter: {
+            loop: `result = []<br><b>for</b> r <b>in</b> rainfall:<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b> <span class="syntax-part cond-amber">r &gt; 0</span>:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;result.append(<span class="syntax-part expr-blue">r</span>)`,
+            comp: `result = [ <span class="syntax-part expr-blue">r</span> <span class="syntax-part loop-purple">for r in rainfall</span> <b>if</b> <span class="syntax-part cond-amber">r &gt; 0</span> ]`
+        },
+        ifelse: {
+            loop: `result = []<br><b>for</b> t <b>in</b> temperatures:<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b> t &lt; 0:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;val = <span class="syntax-part expr-blue">"cold"</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<b>else</b>:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;val = <span class="syntax-part expr-blue">"warm"</span><br>&nbsp;&nbsp;&nbsp;&nbsp;result.append(val)`,
+            comp: `result = [ <span class="syntax-part expr-blue">"cold"</span> <b>if</b> <span class="syntax-part cond-amber">t &lt; 0</span> <b>else</b> <span class="syntax-part expr-blue">"warm"</span> <span class="syntax-part loop-purple">for t in temperatures</span> ]`
+        }
+    };
+
+    function switchMode(mode) {
+        activeMode = mode;
+        document.getElementById('tab-filter').classList.toggle('active', mode === 'filter');
+        document.getElementById('tab-ifelse').classList.toggle('active', mode === 'ifelse');
+        
+        document.getElementById('loop-code').innerHTML = dataTemplates[mode].loop;
+        document.getElementById('comp-code').innerHTML = dataTemplates[mode].comp;
+        
+        clearInterval(animationInterval);
+        resetArrayUI();
+    }
+
+    function resetArrayUI() {
+        const container = document.getElementById('array-engine');
+        container.innerHTML = '';
+        sourceData.forEach((val) => {
+            const div = document.createElement('div');
+            div.className = 'element-box';
+            div.innerText = activeMode === 'filter' ? `${val} mm` : `${val - 10} °C`;
+            container.appendChild(div);
+        });
+    }
+
+    function runPipelineAnimation() {
+        resetArrayUI();
+        const nodes = document.getElementById('array-engine').children;
+        let currentIdx = 0;
+        
+        clearInterval(animationInterval);
+        
+        animationInterval = setInterval(() => {
+            if (currentIdx > 0) {
+                nodes[currentIdx - 1].classList.remove('processing');
+            }
+            if (currentIdx >= nodes.length) {
+                clearInterval(animationInterval);
+                return;
+            }
+            
+            const element = nodes[currentIdx];
+            element.className = 'element-box processing';
+            
+            setTimeout(() => {
+                if (activeMode === 'filter') {
+                    if (sourceData[currentIdx] > 0) {
+                        element.classList.add('accepted');
+                    } else {
+                        element.classList.add('rejected');
+                    }
+                } else {
+                    const tempValue = sourceData[currentIdx] - 10;
+                    if (tempValue < 0) {
+                        element.innerText = 'cold';
+                        element.classList.add('cold-highlight');
+                    } else {
+                        element.innerText = 'warm';
+                        element.classList.add('warm-highlight');
+                    }
+                }
+            }, 300);
+            
+            currentIdx++;
+        }, 900);
+    }
+
+    window.onload = () => switchMode('filter');
+</script>
+</body>
+</html>
